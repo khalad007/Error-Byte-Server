@@ -28,7 +28,9 @@ async function run() {
         await client.connect();
 
         const classesCollection = client.db("classDB").collection("classes");
+        const userCollection = client.db("classDB").collection("users");
         const reviewCollection = client.db("classDB").collection("review");
+        const cartCollection = client.db("classDB").collection("carts");
 
         // for popular classes (in home page)
         app.get('/classes', async (req, res) => {
@@ -47,21 +49,47 @@ async function run() {
         })
 
         // for single class details 
-       
         app.get('/allClasses/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
 
             const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: { Title: 1, Price: 1,Name: 1, Image: 1  },
+                projection: { Title: 1, Price: 1, Name: 1, Image: 1, TotalEnrolment: 1, ShortDescription: 1 },
             };
 
             const result = await classesCollection.findOne(query, options);
             res.send(result);
         })
 
+        //cart collection 
+        app.post('/carts', async (req, res) => {
+            const cartItem = req.body;
+            const result = await cartCollection.insertOne(cartItem);
+            res.send(result)
+        })
+        //carts collection single user dat a...............................................
+        app.get('/carts', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await cartCollection.find(query).toArray();
+            res.send(result);
+        })
 
+        // users related 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            // insert email if user doesn't exits:
+            //1. email unique, 2. upsert (true) 3. simple
+            // checking 
+            const query = { email: user.email }
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already exists', })
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
