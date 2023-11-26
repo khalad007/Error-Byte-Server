@@ -33,6 +33,32 @@ async function run() {
         const reviewCollection = client.db("classDB").collection("review");
         const cartCollection = client.db("classDB").collection("carts");
 
+        // jwt related api ........................................................................
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1h'
+            })
+            res.send({ token });
+        })
+
+        // middleware 
+        const verifyToken = (req, res, next) => {
+            console.log('inside verify ', req.headers.authorization);
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'UnAuthorized Access' });
+            }
+            const token = req.headers.authorization.split(' ')[1];
+
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'UnAuthorized access ' })
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
+
         // for popular classes (in home page)
         app.get('/classes', async (req, res) => {
             const result = await classesCollection.find().sort({ TotalEnrolment: -1 }).toArray();
@@ -79,7 +105,7 @@ async function run() {
 
         // users related 
         // get all user  in admin dashboard
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
