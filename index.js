@@ -234,6 +234,37 @@ async function run() {
             res.send(result)
         })
 
+        // get all teacher req 
+        app.get('/teacherReq',  async (req, res) => {
+            const result = await teacherReqCollection.find().toArray();
+            res.send(result);
+        })
+
+          // make teacher
+          app.patch('/teacherReq/teacher/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    role: 'teacher'
+                }
+            }
+            const result = await teacherReqCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+          // reject teacher rquest
+          app.patch('/teacherReq/teacherReject/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    role: 'reject'
+                }
+            }
+            const result = await teacherReqCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
