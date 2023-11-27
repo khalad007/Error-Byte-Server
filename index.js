@@ -30,6 +30,7 @@ async function run() {
         await client.connect();
 
         const classesCollection = client.db("classDB").collection("classes");
+        const addClassCollection = client.db("classDB").collection("addClass");
         const userCollection = client.db("classDB").collection("users");
         const reviewCollection = client.db("classDB").collection("review");
         const cartCollection = client.db("classDB").collection("carts");
@@ -193,7 +194,7 @@ async function run() {
                 return res.status(403).send({ message: 'forbidden access' })
 
             }
-           
+
             const result = await paymentCollection.find(query).toArray();
             res.send(result);
 
@@ -214,7 +215,7 @@ async function run() {
 
             // Add data to the myEnrollmentCollection
             const addResult = await myEnrollmentCollection.insertMany(enrollmentItems);
-          
+
 
             // Now delete payment items from the cartCollection
             const query = {
@@ -228,20 +229,20 @@ async function run() {
         });
 
         //teacher 
-        app.post('/teacherReq', async(req, res) => {
+        app.post('/teacherReq', async (req, res) => {
             const tReq = req.body;
             const result = await teacherReqCollection.insertOne(tReq);
             res.send(result)
         })
 
         // get all teacher req 
-        app.get('/teacherReq',  async (req, res) => {
+        app.get('/teacherReq', async (req, res) => {
             const result = await teacherReqCollection.find().toArray();
             res.send(result);
         })
 
-          // make teacher
-          app.patch('/teacherReq/teacher/:id', verifyToken, verifyAdmin, async (req, res) => {
+        // make teacher
+        app.patch('/teacherReq/teacher/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const updatedDoc = {
@@ -252,8 +253,8 @@ async function run() {
             const result = await teacherReqCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
-          // reject teacher rquest
-          app.patch('/teacherReq/teacherReject/:id', verifyToken, verifyAdmin, async (req, res) => {
+        // reject teacher rquest
+        app.patch('/teacherReq/teacherReject/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const updatedDoc = {
@@ -264,6 +265,71 @@ async function run() {
             const result = await teacherReqCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
+
+        //for tech on eerbyte page < my request status>
+
+        // app.get('/myApplyStatus/:email',verifyToken,  async (req, res) => {
+        //     const query = { email: req.params.email }
+        //     console.log(query)
+        //     if (req.params.email !== req.decoded.email) {
+        //         return res.status(403).send({ message: 'forbidden access' })
+
+        //     }
+
+        //     const result = await teacherReqCollection.find(query).toArray();
+        //     res.send(result);
+
+        // })
+
+        app.get('/myApplyStatus/:email', async (req, res) => {
+            const query = { email: req.params.email }
+            console.log(query)
+            // if (req.params.email !== req.decoded.email) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+
+            // }
+
+            const result = await teacherReqCollection.find(query).toArray();
+            res.send(result);
+
+        })
+
+
+        // app.get('/myApplyStatus/:email',  async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { email: req.params.email }
+
+        //     const options = {
+        //         // Include only the `title` and `imdb` fields in the returned document
+        //         projection: { role: 1 },
+        //     };
+
+        //     const result = await teacherReqCollection.findOne(query, options);
+        //     res.send(result);
+        // })
+
+        // for teacher add class 
+        
+        app.post('/addClass', async (req, res) => {
+            const addCls = req.body;
+            const result = await addClassCollection.insertOne(addCls);
+            res.send(result)
+        })
+
+        // for my allClass which i added 
+
+        app.get('/myClasses/:email', async (req, res) => {
+            const query = { email: req.params.email }
+            // if (req.params.email !== req.decoded.email) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+
+            // }
+
+            const result = await addClassCollection.find(query).toArray();
+            res.send(result);
+
+        })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
