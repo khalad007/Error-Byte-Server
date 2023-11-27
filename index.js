@@ -34,6 +34,8 @@ async function run() {
         const reviewCollection = client.db("classDB").collection("review");
         const cartCollection = client.db("classDB").collection("carts");
         const paymentCollection = client.db("classDB").collection("payments");
+        const myEnrollmentCollection = client.db("classDB").collection("myEnrollments");
+        const teacherReqCollection = client.db("classDB").collection("teacherReqs");
 
         // jwt related api ........................................................................
         app.post('/jwt', async (req, res) => {
@@ -182,7 +184,55 @@ async function run() {
             })
         })
 
+        // payment api 
+        //for transaction history
 
+        app.get('/payments/:email', verifyToken, async (req, res) => {
+            const query = { email: req.params.email }
+            if (req.params.email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+
+            }
+           
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+
+        })
+
+
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+
+            // Create enrollment items
+            const enrollmentItems = payment.cartIds.map(id => ({
+                classId: new ObjectId(id),
+                userEmail: payment.email,
+                // Add other necessary fields
+            }));
+
+            // Add data to the myEnrollmentCollection
+            const addResult = await myEnrollmentCollection.insertMany(enrollmentItems);
+          
+
+            // Now delete payment items from the cartCollection
+            const query = {
+                _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                }
+            };
+            const deleteResult = await cartCollection.deleteMany(query);
+
+            res.send({ addResult, paymentResult, deleteResult });
+        });
+
+        //teacher 
+        app.post('/teacherReq', async(req, res) => {
+            const tReq = req.body;
+            const result = await teacherReqCollection.insertOne(tReq);
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
