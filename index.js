@@ -37,6 +37,7 @@ async function run() {
         const paymentCollection = client.db("classDB").collection("payments");
         const myEnrollmentCollection = client.db("classDB").collection("myEnrollments");
         const teacherReqCollection = client.db("classDB").collection("teacherReqs");
+        const assignmentCollection = client.db("classDB").collection("assignments");
 
         // jwt related api ........................................................................
         app.post('/jwt', async (req, res) => {
@@ -266,6 +267,33 @@ async function run() {
             res.send(result);
         })
 
+        // reject classes in admin all classes page which request came from teacher 
+        app.patch('/allClassForAdmin/classReject/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+
+                    statuss: 'reject'
+                }
+            }
+            const result = await addClassCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+        // Aprove classes in admin all classes page which request came from teacher 
+        app.patch('/allClassForAdmin/classApprove/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+
+                    statuss: 'approve'
+                }
+            }
+            const result = await addClassCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
         //for tech on eerbyte page < my request status>
 
         // app.get('/myApplyStatus/:email',verifyToken,  async (req, res) => {
@@ -316,6 +344,14 @@ async function run() {
             res.send(result)
         })
 
+        // after approve
+        app.post('/addClassFrom', async (req, res) => {
+            const addCls = req.body;
+           
+            const result = await classesCollection.insertOne(addCls);
+            res.send(result)
+        })
+
         // for my allClass which i added 
 
         app.get('/myClasses/:email', async (req, res) => {
@@ -346,6 +382,12 @@ async function run() {
             res.send(result);
         })
 
+        // for admin to approve or reject class added by teacher ......................................................................
+        app.get('/allClassForAdmin', async (req, res) => {
+            const result = await addClassCollection.find().toArray();
+            res.send(result);
+        })
+
         //    for update class (teacher )
         app.patch('/myClss/:id', async (req, res) => {
             const item = req.body;
@@ -360,6 +402,18 @@ async function run() {
                 }
             }
             const result = await addClassCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
+        // for add assignmment
+        app.post('/addAssignment', async (req, res) => {
+            const addAss = req.body;
+            const result = await assignmentCollection.insertOne(addAss);
+            res.send(result)
+        })
+        // for show assignment cart (how many assignmetn for this class )
+        app.get('/addAssignment', async (req, res) => {
+            const result = await assignmentCollection.find().toArray();
             res.send(result);
         })
 
