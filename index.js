@@ -309,7 +309,7 @@ async function run() {
         // })
 
         // for teacher add class 
-        
+
         app.post('/addClass', async (req, res) => {
             const addCls = req.body;
             const result = await addClassCollection.insertOne(addCls);
@@ -329,6 +329,40 @@ async function run() {
             res.send(result);
 
         })
+
+        // for delete my class (teacher) 
+        app.delete('/myClasses/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await addClassCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // for update teacher class 
+        app.get('/myClss/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await addClassCollection.findOne(query);
+            res.send(result);
+        })
+
+        //    for update class (teacher )
+        app.patch('/myClss/:id', async (req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    Title: item.Title,
+                    ShortDescription: item.ShortDescription,
+                    Price: item.Price,
+                    Image: item.Image
+                }
+            }
+            const result = await addClassCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
 
 
         // Send a ping to confirm a successful connection
