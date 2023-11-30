@@ -38,6 +38,7 @@ async function run() {
         const myEnrollmentCollection = client.db("classDB").collection("myEnrollments");
         const teacherReqCollection = client.db("classDB").collection("teacherReqs");
         const assignmentCollection = client.db("classDB").collection("assignments");
+        const userAssSubmitCollection = client.db("classDB").collection("userAssSubmits");
 
         // jwt related api ........................................................................
         app.post('/jwt', async (req, res) => {
@@ -126,6 +127,21 @@ async function run() {
         // get all user  in admin dashboard
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+        // get all user  in Main home ui ..................??????????????????????????????????????????????????????????????????????
+        app.get('/usersForHome', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+        // get all enrollment  in Main home ui ..................??????????????????????????????????????????????????????????????????????
+        app.get('/enrollmentForHome', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        })
+        // get all enrollment  in Main home ui ..................??????????????????????????????????????????????????????????????????????
+        app.get('/classesForHome', async (req, res) => {
+            const result = await classesCollection.find().toArray();
             res.send(result);
         })
 
@@ -347,7 +363,7 @@ async function run() {
         // after approve
         app.post('/addClassFrom', async (req, res) => {
             const addCls = req.body;
-           
+
             const result = await classesCollection.insertOne(addCls);
             res.send(result)
         })
@@ -388,6 +404,19 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/allClassForAdminSeeReview', async (req, res) => {
+            const result = await reviewCollection.find().toArray();
+            res.send(result);
+        })
+
+        // for see progress match this on is for loader (see progress buttn) 
+        app.get('/progressTitleMatch/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id)}
+            const result = await addClassCollection.findOne(query);
+            res.send(result)
+        })
+
         //    for update class (teacher )
         app.patch('/myClss/:id', async (req, res) => {
             const item = req.body;
@@ -416,7 +445,40 @@ async function run() {
             const result = await assignmentCollection.find().toArray();
             res.send(result);
         })
+        // for show per day assignment
+        app.get('/perDayAss', async (req, res) => {
+            const result = await userAssSubmitCollection.find().toArray();
+            res.send(result);
+        })
 
+        // for see progress (which are from student reviw ).......................................................
+        app.get('/seeProgress/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await reviewCollection.findOne(query);
+            res.send(result);
+        })
+
+        // for add reviw 
+        app.post('/addReview', async (req, res) => {
+            const tReq = req.body;
+            const result = await reviewCollection.insertOne(tReq);
+            res.send(result)
+        })
+
+        // for assignment which is added by teacher , it will show on the student enrolled classe countinue button 
+       
+        app.get('/enrollClassAss', async (req, res) => {
+            const result = await assignmentCollection.find().toArray();
+            res.send(result);
+        })
+
+         // assignment per day (submit from 8 no)
+         app.post('/assignmentPerDay', async (req, res) => {
+            const tReq = req.body;
+            const result = await userAssSubmitCollection.insertOne(tReq);
+            res.send(result)
+        })
 
 
         // Send a ping to confirm a successful connection
